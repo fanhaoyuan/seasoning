@@ -1,0 +1,19 @@
+{
+  "name": "seasoning",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "version": "0.0.0",
+  "repository": "https://github.com/fanhaoyuan/seasoning.git",
+  "author": "Jarvis <418536538@qq.com>",
+  "license": "MIT",
+  "gitHooks": {
+    "commit-msg": "node scripts/commit-msg-validator.js"
+  },
+  "devDependencies": {
+    "chalk": "^4.1.0",
+    "lerna": "^3.22.1",
+    "yorkie": "^2.0.0"
+  }
+}
