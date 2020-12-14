@@ -8,6 +8,14 @@ export interface IConfig {
     data?: IData;
     /**元素控制器 */
     elementController?: ElementController;
+    /**输入框类名 */
+    inputClassName: string;
+    /**单选框类名 */
+    radioClassName: string;
+    /**复选框类名 */
+    checkboxClassName: string;
+    /**文字类名 */
+    textClassName: string;
 }
 
 export interface IData {
