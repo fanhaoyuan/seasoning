@@ -28,7 +28,7 @@ export default class Tree {
      * @returns {this} 
      */
     set<T extends keyof IConfig>(key: T | { [K in T]?: IConfig[K] }, value?: IConfig[T]): this {
-        if (isString(key)) this.config[key] = value;
+        if (isString(key) && value) this.config[key] = value;
         if (isObject(key)) Object.assign(this.config, key);
         return this;
     };
@@ -37,8 +37,12 @@ export default class Tree {
      * @description 获取默认配置
      */
     getDefaultConfig(): IConfig {
+        const PREFIX_CLASS = 'tree-form';
         return {
-
+            inputClassName: `${PREFIX_CLASS}-input`,
+            radioClassName: `${PREFIX_CLASS}-radio`,
+            checkboxClassName: `${PREFIX_CLASS}-checkbox`,
+            textClassName: `${PREFIX_CLASS}-text`
         };
     };
 
