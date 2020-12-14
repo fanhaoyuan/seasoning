@@ -9,5 +9,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/fanhaoyuan/seasoning/packages/tree-form"
+  },
+  "devDependencies": {
+    "typescript": "^4.1.3"
   }
 }
