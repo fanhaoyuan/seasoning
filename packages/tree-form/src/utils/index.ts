@@ -1,33 +1,25 @@
 'use strict';
 
-/**
- * @description 检查指定值的类型
- * @param {unknown} value 检查的值
- * @return {string} 类型 
- */
-export const typeOf = (value: unknown): string => {
-    const map = {
-        '[object Boolean]': 'boolean',
-        '[object Number]': 'number',
-        '[object String]': 'string',
-        '[object Function]': 'function',
-        '[object Array]': 'array',
-        '[object Date]': 'date',
-        '[object RegExp]': 'regExp',
-        '[object Undefined]': 'undefined',
-        '[object Null]': 'null',
-        '[object Object]': 'object'
-    };
-    return map[Function.prototype.call.bind(Object.prototype.toString)(value)] || 'unknown';
-}
+export * from './dom';
+export * from './types';
 
-/**检查是否为string类型 */
-export const isString = (value: unknown): value is string => typeOf(value) === 'string';
-/**检查是否为object类型 */
-export const isObject = (value: unknown): value is object => typeOf(value) === 'object';
-/**检查是否为array类型 */
-export const isArray = (value: unknown): value is Array<any> => typeOf(value) === 'array';
-/**检查是否为undefined类型 */
-export const isUndefined = (value: unknown): value is undefined => typeOf(value) === 'undefined';
-/**检查是否为function类型 */
-export const isFunction = (value: unknown): value is Function => typeOf(value) === 'function';
+/**
+* @description 生成随机字符串(a-z,A-Z,0-9)组成的uuid 默认长度为32
+* @param {Number} length 生成uuid的长度
+* @return {String} uuid
+*/
+
+export const uuid = (length: number = 32): string => {
+
+    const STRING_TEMPLATE = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+
+    const RANGE = STRING_TEMPLATE.length;
+
+    let string = '';
+
+    for (let i = 0; i < length; i++) {
+        string += STRING_TEMPLATE.charAt(Math.floor(Math.random() * RANGE));
+    };
+
+    return string;
+}
