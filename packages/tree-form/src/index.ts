@@ -1,5 +1,5 @@
 'use strict';
 
-import TreeForm from './tree';
+import TreeForm from './treeForm';
 
 export default TreeForm;
