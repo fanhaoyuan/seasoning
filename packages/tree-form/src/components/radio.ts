@@ -1,5 +1,7 @@
 'use strict';
 
+import eventEmitter from '../eventEmitter';
+import { ITreeNodeConfig } from '../types';
 /**
  * @fileoverview 生成radio DOM
  * @example
@@ -11,12 +13,9 @@
  *      </span>
  * </label>
  */
-import { createElement, addClassName, domTreeRender } from '../utils';
+import { createElement, addClassName, domTreeRender, removeClassName } from '../utils';
 
-interface IRadioConfg {
-    prefixClass: string;
-    checkedClass: string;
-};
+const getCheckedClass = (prefixClass: string) => `${prefixClass}-checked`;
 
 interface IRadioDOM {
     radioWrapper: HTMLLabelElement,
@@ -26,22 +25,22 @@ interface IRadioDOM {
 }
 
 export default class Radio {
-    config: IRadioConfg;
-    constructor(config: Partial<IRadioConfg> = {}) {
-        this.config = Object.assign(this.getDefaultConfig(), config);
-    };
-
-    getDefaultConfig(): IRadioConfg {
-        const prefixClass = 'tree-form-radio';
-
-        return {
-            prefixClass,
-            checkedClass: `${prefixClass}-checked`
-        }
+    config: ITreeNodeConfig;
+    input!: HTMLElement;
+    el!: HTMLElement;
+    prefixClass: string = 'tree-form-radio';
+    constructor(config: ITreeNodeConfig) {
+        this.config = config;
+        eventEmitter.on(`${this.config.key}:checked`, (checked: boolean) => {
+            console.log('radio', checked)
+            this.setStateClasses(this.el, checked)
+            //@ts-ignore
+            this.input.checked = checked;
+        })
     };
 
     createDOM(): IRadioDOM {
-        const { prefixClass } = this.config;
+        const { prefixClass } = this;
 
         const radioWrapper = createElement('label', {
             className: `${prefixClass}-wrapper`
@@ -63,6 +62,9 @@ export default class Radio {
     createDomTree(elements: IRadioDOM) {
         const { radioWrapper, radio, radioInner, radioInput } = elements;
 
+        this.el = radio;
+        this.input = radioInput;
+
         return {
             el: radioWrapper,
             children: [{
@@ -79,19 +81,30 @@ export default class Radio {
     };
 
     bindEvents(elements: IRadioDOM) {
-        const { checkedClass } = this.config;
-        const { radio } = elements;
+        const { radio, radioInput } = elements;
+        const { checked } = this.config;
+
+        if (checked) {
+            radioInput.checked = checked;
+            addClassName(radio, `${this.prefixClass}-checked`)
+        }
+
         radio.addEventListener('change', e => {
-            console.log(e)
             //@ts-ignore
             const checked = e.target?.checked;
-            if (checked) addClassName(radio, checkedClass);
-            this.onChange(e)
+            this.setStateClasses(radio, checked)
+            eventEmitter.emit('radio:change', this.config, checked);
         })
     };
 
-    onChange(e: Event) {
+    setStateClasses(target: HTMLElement, checked: boolean) {
+        const { prefixClass } = this;
 
+        if (checked) {
+            addClassName(target, getCheckedClass(prefixClass));
+            return;
+        }
+        removeClassName(target, getCheckedClass(prefixClass))
     }
 
     render(): HTMLElement {
