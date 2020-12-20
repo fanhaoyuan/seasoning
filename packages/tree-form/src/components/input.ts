@@ -9,13 +9,7 @@
  * </div>
  */
 import { createElement, addClassName, removeClassName, domTreeRender } from '../utils';
-import eventEmitter from '../eventEmitter';
-import { createObserver, IWatcher } from '../observer';
-
-interface IInputConfig {
-    prefixClass: string;
-    value: string;
-};
+import { ITreeNodeConfig } from '../types';
 
 interface IInputDOM {
     inputWrapper: HTMLDivElement;
@@ -23,31 +17,15 @@ interface IInputDOM {
 }
 
 export default class Input {
-    config: IInputConfig;
-    constructor(config: Partial<IInputConfig> = {}) {
-        this.config = createObserver(Object.assign(this.getDefaultConfig(), config), this.setWatcher());
+    config: ITreeNodeConfig;
+    prefixClass: string = 'tree-form-input';
+    constructor(config: ITreeNodeConfig) {
+        this.config = config
     };
 
-    getDefaultConfig(): IInputConfig {
-        const prefixClass = 'tree-form-input'
-        return {
-            prefixClass,
-            value: ''
-        }
-    };
-
-    setWatcher(): IWatcher<IInputConfig> {
-        return {
-            value: {
-                hander(val, oldVal) {
-                    eventEmitter.emit('input:onchange', val)
-                }
-            }
-        }
-    };
 
     createDOM(): IInputDOM {
-        const { prefixClass, value } = this.config;
+        const { prefixClass, config: { value, inputOptions } } = this;
         const inputWrapper = createElement('div', {
             className: `${prefixClass}-wrapper`
         })
@@ -56,7 +34,8 @@ export default class Input {
             autocomplete: 'off',
             type: 'text',
             className: prefixClass,
-            value
+            ...inputOptions,
+            value: value ? value : ''
         });
 
         return { inputWrapper, input }
@@ -65,7 +44,6 @@ export default class Input {
     bindEvents(elements: IInputDOM) {
         const { input } = elements;
         input.addEventListener('input', (e) => {
-            eventEmitter.emit('input:oninput', e);
             //@ts-ignore
             this.config.value += e.data;
         });
