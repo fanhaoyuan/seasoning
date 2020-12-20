@@ -14,12 +14,13 @@
   * </ul>
   */
 
-import { createElement, addClassName, domTreeRender, uuid } from '../utils';
-import { InputType, ITreeNodeConfig } from '../types';
-import { createObserver, IWatcher } from '../observer';
+import { createElement, domTreeRender } from '../utils';
+import { ITreeNodeConfig, NodeType } from '../types';
+import { createObserver } from '../observer';
 import Checkbox from './checkbox';
 import Input from './input';
 import Radio from './radio';
+import eventEmitter from '../eventEmitter';
 
 interface ITreeNodeDOM {
     treeNode: HTMLUListElement;
@@ -30,52 +31,69 @@ interface ITreeNodeDOM {
 
 export default class TreeNode {
     config: ITreeNodeConfig;
-    watcher: IWatcher = {};
-    constructor(config: Partial<ITreeNodeConfig> = {}) {
-        this.config = createObserver(Object.assign(this.getDefaultConfig(), config), this.setWatcher());
-    };
-
-    getDefaultConfig(): ITreeNodeConfig {
-        return {
-            prefixClass: 'tree-form',
-            title: '',
-            children: [],
-            key: uuid(6),
-            expand: true,
-            selected: false,
-            checked: false,
-            hasInput: false,
-            nodeType: 'text'
-        };
-    };
-
-    setWatcher(): IWatcher<ITreeNodeConfig> {
-        return {
-            key: {
-                hander(value, oldValue) {
-                    console.log(value, oldValue);
+    prefixClass: string = 'tree-form';
+    el: HTMLElement | null = null;
+    constructor(config: ITreeNodeConfig) {
+        this.config = createObserver(config, {
+            checked: {
+                hander: (val, oldVal) => {
+                    eventEmitter.emit(`${this.config.key}:checked`, val)
                 }
             },
             expand: {
-                hander(value, oldValue) {
-                    console.log(value, oldValue)
+                hander: (val, oldVal) => {
+                    // if (val === oldVal) return;
+                    if (this.config?.children?.length) {
+                        this.handleExpand(Boolean(val))
+                    }
                 }
             }
-        }
+        });
+
+        eventEmitter.on(`${this.config.key}:update`, (options: object) => this.update(options));
     };
 
-    bindEvents(elements: ITreeNodeDOM) {
-        const { treeNodeTitle } = elements;
-
-        treeNodeTitle.addEventListener('click', e => {
-            console.log(this.config);
-            // this.config.expand = !this.config.expand
-            this.config.key = '111'
+    update(options: Partial<ITreeNodeConfig>) {
+        Object.keys(options).forEach(key => {
+            this.config[key] = options[key];
         });
     }
 
+    handleExpand(expanded: boolean) {
+
+        const treeNodeContainer = this.el?.querySelector('li');
+
+        if (!treeNodeContainer) return;
+
+        if (expanded && this.config?.children?.length) {
+            const childrenNode = this.createChildrenNode();
+
+            for (const childNode of childrenNode) {
+                //@ts-ignore
+                treeNodeContainer.appendChild(childNode.el);
+            }
+
+            return;
+        };
+
+        this.config.children?.forEach(_ => {
+            const child = treeNodeContainer.querySelector(`.${this.prefixClass}-children`) as Node;
+            treeNodeContainer.removeChild(child);
+        });
+
+    };
+
+    bindEvents(elements: ITreeNodeDOM) {
+        const { key } = this.config;
+        const { treeNodeTitle, treeNode } = elements;
+
+        treeNodeTitle.addEventListener('click', e => {
+            this.config.expand = !this.config.expand;
+        });
+
+    }
     createDOM(): ITreeNodeDOM {
-        const { prefixClass, title } = this.config;
+        const { prefixClass, config: { title } } = this;
         const treeNode = createElement('ul', {
             className: `${prefixClass}-children`
         });
@@ -92,34 +110,36 @@ export default class TreeNode {
         return { treeNode, treeNodeContainer, treeNodeArrow, treeNodeTitle };
     };
 
+    createChildrenNode() {
+        const { children = [] } = this.config;
+
+        return children.length ? children.map(child => {
+            return {
+                el: new TreeNode(child).render()
+            };
+        }) : [{
+            el: null,
+            shouldRender: false
+        }]
+    }
+
+    createCustomNode(nodeType: NodeType, config: ITreeNodeConfig) {
+        const nodeMap = {
+            checkbox: Checkbox,
+            radio: Radio,
+            input: Input,
+            text: TreeNode
+        };
+
+        return new nodeMap[nodeType](config);
+    }
+
     createDOMTree(elements: ITreeNodeDOM) {
         const { treeNode, treeNodeContainer, treeNodeArrow, treeNodeTitle } = elements;
 
-        const { children = [], prefixClass, nodeType, hasInput } = this.config;
+        const { nodeType, hasInput, expand } = this.config;
 
-        const childrenNode: any = children.map(child => {
-            return {
-                el: new TreeNode({ ...child, prefixClass }).render()
-            }
-        });
-
-        // let optionNode, inputNode;
-        // if (nodeType === 'checkbox') {
-        //     optionNode = {
-        //         el: new Checkbox().render()
-        //     }
-
-        // } else if (nodeType === 'radio') {
-        //     optionNode = {
-        //         el: new Radio().render()
-        //     }
-        // } else {
-        //     optionNode = { el: null, shouldRender: false };
-        // };
-
-        // if (hasInput) {
-        //     inputNode = { el: new Input().render() };
-        // };
+        const childrenNode: any = expand ? this.createChildrenNode() : [{ el: null, shouldRender: false }]
 
         return {
             el: treeNode,
@@ -130,11 +150,21 @@ export default class TreeNode {
                         {
                             el: treeNodeArrow
                         },
-                        // optionNode,
+                        {
+                            el: nodeType === 'checkbox'
+                                ? new Checkbox(this.config).render()
+                                : nodeType === 'radio'
+                                    ? new Radio(this.config).render()
+                                    : null,
+                            shouldRender: Boolean(nodeType && ['checkbox', 'radio'].includes(nodeType))
+                        },
                         {
                             el: treeNodeTitle
                         },
-                        // inputNode,
+                        {
+                            el: hasInput ? new Input(this.config).render() : null,
+                            shouldRender: Boolean(hasInput)
+                        },
                         ...childrenNode
                     ]
                 }
@@ -147,6 +177,7 @@ export default class TreeNode {
         this.bindEvents(elements);
         const domTree = this.createDOMTree(elements);
         const el = domTreeRender(domTree)
+        this.el = el;
         return el;
     }
 }
