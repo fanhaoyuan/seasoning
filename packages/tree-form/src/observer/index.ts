@@ -14,14 +14,18 @@ export type IWatcher<T extends object = {}> = {
 
 export const createObserver = <T extends object>(target: T, watcher: IWatcher<T>): T => {
     return new Proxy(target, {
-        set(target, key, value, receiver) {
+        get(target, propKey, receiver) {
+            // console.log('GET ', propKey);
+            return Reflect.get(target, propKey, receiver);
+        },
+        set(target, propKey, value, receiver) {
+            // console.log('SET ', propKey);
             Object.keys(watcher).forEach(_key => {
-                if (_key !== key) return;
-                watcher[_key].hander(value, target[key]);
+                if (_key !== propKey ) return;
+                watcher[propKey].hander(value, target[propKey]);
             });
-            target[key] = value;
-            return true;
-        }
+            return Reflect.set(target, propKey, value, receiver);
+        },
     })
 };
 
