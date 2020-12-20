@@ -26,21 +26,11 @@ interface ICheckboxDOM {
 };
 
 export default class Checkbox {
-    config: ICheckboxConfig;
-    constructor(config: Partial<ICheckboxConfig> = {}) {
-        this.config = Object.assign(this.getDefaultConfig(), config);
-    };
-
-    getDefaultConfig(): ICheckboxConfig {
-        const prefixClass = 'tree-form-checkbox';
-        return {
-            prefixClass,
-            checkedClass: `${prefixClass}-checked`
-        };
+    prefixClass: string = 'tree-form-checkbox';
     };
 
     createDOM(): ICheckboxDOM {
-        const { prefixClass } = this.config;
+        const { prefixClass } = this;
 
         const checkboxWrapper = createElement('label', {
             className: `${prefixClass}-wrapper`
@@ -99,4 +89,5 @@ export default class Checkbox {
         const domTree = this.createDomTree(elements);
         return domTreeRender(domTree);
     };
+        const { prefixClass } = this;
 };
