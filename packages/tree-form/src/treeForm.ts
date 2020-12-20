@@ -45,18 +45,9 @@ export default class TreeForm {
         };
     };
 
-    setWatcher(): IWatcher<IConfig> {
-        return {
-            data: {
-                hander: (val, oldVal) => {
-                    if (this.isRender) {
-                        console.log(val, oldVal)
-                    }
-                }
-            }
-        }
+    getEvents() {
+        return eventEmitter.events;
     }
-
     /**
      * @description 设置数据
      * @param {object} data
