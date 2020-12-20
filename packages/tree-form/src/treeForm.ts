@@ -3,7 +3,7 @@
 import { IConfig, ITreeData, ITreeNodeConfig } from './types';
 import { isString, isObject } from './utils';
 import { Tree } from './components';
-import { createObserver, IWatcher } from './observer';
+import eventEmitter from './eventEmitter';
 
 export default class TreeForm {
     config!: IConfig;
@@ -63,7 +63,7 @@ export default class TreeForm {
     render() {
         const data = this.get('data');
         const prefixClass = this.get('prefixClass');
-
+        //@ts-ignore
         const tree = new Tree({ data, prefixClass }).render();
 
         const container = this.get('container');
