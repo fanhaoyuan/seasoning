@@ -26,6 +26,8 @@ interface ICheckboxDOM {
 };
 
 export default class Checkbox {
+    input!: HTMLElement;
+    el!: HTMLElement;
     prefixClass: string = 'tree-form-checkbox';
     };
 
@@ -52,6 +54,8 @@ export default class Checkbox {
     createDomTree(elements: ICheckboxDOM) {
         const { checkboxWrapper, checkbox, checkboxInner, checkboxInput } = elements;
 
+        this.input = checkboxInput;
+        this.el = checkbox
         return {
             el: checkboxWrapper,
             children: [{
