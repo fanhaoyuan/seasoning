@@ -1,4 +1,5 @@
 'use strict';
+import eventEmitter from '../eventEmitter';
 /**
  * @fileoverview 生成checkbox DOM
  * @example
@@ -11,12 +12,7 @@
  * </label>
  */
 import { createElement, addClassName, removeClassName, domTreeRender } from '../utils';
-import eventEmitter from '../eventEmitter';
-
-interface ICheckboxConfig {
-    prefixClass: string;
-    checkedClass: string;
-};
+import { ITreeNodeConfig } from '../types';
 
 interface ICheckboxDOM {
     checkboxWrapper: HTMLLabelElement,
@@ -25,10 +21,20 @@ interface ICheckboxDOM {
     checkboxInput: HTMLInputElement
 };
 
+const getCheckedClass = (prefixClass: string) => `${prefixClass}-checked`;
+
 export default class Checkbox {
+    config: ITreeNodeConfig;
     input!: HTMLElement;
     el!: HTMLElement;
     prefixClass: string = 'tree-form-checkbox';
+    constructor(config: ITreeNodeConfig) {
+        this.config = config;
+        eventEmitter.on(`${this.config.key}:checked`, (checked: boolean) => {
+            this.setStateClasses(this.el, checked)
+            //@ts-ignore
+            this.input.checked = checked;
+        })
     };
 
     createDOM(): ICheckboxDOM {
@@ -72,19 +78,22 @@ export default class Checkbox {
     };
 
     bindEvents(elements: ICheckboxDOM) {
-        const { checkedClass } = this.config;
-        const { checkbox } = elements;
-        checkbox.addEventListener('change', e => {
-            console.log(e)
-            eventEmitter.emit('checkbox:onchange', e)
+        const { checkbox, checkboxInput } = elements;
+
+        const { checked } = this.config;
+
+        if (checked) {
+            checkboxInput.checked = checked;
+            this.setStateClasses(checkbox, checked)
+        }
+
+        checkbox.addEventListener('change', event => {
             //@ts-ignore
-            const checked = e.target?.checked;
-            if (checked) {
-                addClassName(checkbox, checkedClass);
-                return;
-            }
-            removeClassName(checkbox, checkedClass)
-        })
+            const checked = event.target?.checked;
+            this.config.checked = checked;
+            this.setStateClasses(checkbox, checked);
+            eventEmitter.emit('checkbox:change', this.config, checked);
+        });
     };
 
     render(): HTMLElement {
@@ -93,5 +102,14 @@ export default class Checkbox {
         const domTree = this.createDomTree(elements);
         return domTreeRender(domTree);
     };
+
+    setStateClasses(target: HTMLElement, checked: boolean) {
         const { prefixClass } = this;
+
+        if (checked) {
+            addClassName(target, getCheckedClass(prefixClass));
+            return;
+        }
+        removeClassName(target, getCheckedClass(prefixClass))
+    }
 };
