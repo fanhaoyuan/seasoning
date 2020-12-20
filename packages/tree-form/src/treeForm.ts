@@ -10,7 +10,7 @@ export default class TreeForm {
     destroyed: boolean = false;
     isRender: boolean = false;
     constructor(config: Partial<IConfig> = {}) {
-        this.config = createObserver(Object.assign(this.getDefaultConfig(), config), this.setWatcher());
+        this.config = Object.assign(this.getDefaultConfig(), config);
     };
 
     /**
