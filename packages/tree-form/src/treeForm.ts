@@ -1,6 +1,6 @@
 'use strict';
 
-import { IConfig, ITreeData, ITreeNodeConfig } from './types';
+import { IConfig, ITreeNodeConfig } from './types';
 import { isString, isObject } from './utils';
 import { Tree } from './components';
 import eventEmitter from './eventEmitter';
@@ -77,7 +77,7 @@ export default class TreeForm {
         this.isRender = true;
     };
 
-    getData(): ITreeData[] {
+    getData(): ITreeNodeConfig[] {
         return this.get('data');
     }
 };

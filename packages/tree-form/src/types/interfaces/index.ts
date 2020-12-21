@@ -16,14 +16,6 @@ export interface ITreeConfig {
     data: ITreeNodeConfig[];
 
     treeData: ITreeNodeConfig[];
-
-    defaultExpandedKeys: string[];
-
-    defaultSelectedKeys: string[];
-
-    onCheck?(checkedKeys: string[]): void;
-
-    onExpand?(expandedKeys: string[]): void;
 };
 
 export interface ITreeNodeConfig {
@@ -53,12 +45,6 @@ export interface ITreeNodeConfig {
 };
 
 export type NodeType = 'checkbox' | 'radio' | 'text' | 'input'
-
-export interface ITreeData {
-    title?: string;
-    key: string;
-    children?: ITreeData[]
-}
 
 export interface INullElement {
     el: null;
