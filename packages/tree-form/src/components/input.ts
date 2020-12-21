@@ -8,37 +8,62 @@
  *      <input autocomplete="off" spellcheck="false" type="text" class=`${prefixClass}`></input>
  * </div>
  */
-import { createElement, addClassName, removeClassName, domTreeRender } from '../utils';
+import { createElement, domTreeRender, isString } from '../utils';
 import { ITreeNodeConfig } from '../types';
 
 interface IInputDOM {
     inputWrapper: HTMLDivElement;
     input: HTMLInputElement;
+    inputPrefix: HTMLSpanElement | null;
+    inputSuffix: HTMLSpanElement | null;
+    inputGroupWrapper: HTMLSpanElement | null;
 }
 
 export default class Input {
     config: ITreeNodeConfig;
     prefixClass: string = 'tree-form-input';
     constructor(config: ITreeNodeConfig) {
-        this.config = config
+        this.config = config;
     };
 
 
     createDOM(): IInputDOM {
-        const { prefixClass, config: { value, inputOptions } } = this;
+        const { prefixClass, config: { value, inputOptions: { prefix, suffix, style = {} } = {} } } = this;
+
+        const hasPrefix = isString(prefix);
+        const hasSuffix = isString(suffix);
+
+        const inputStyle = Object.keys(style).reduce((pre: string, cur: string) => `${pre}${cur}:${style[cur]};`, '');
+
         const inputWrapper = createElement('div', {
-            className: `${prefixClass}-wrapper`
-        })
+            className: `${prefixClass}-wrapper${hasPrefix || hasSuffix ? ` ${prefixClass}-group` : ''}`,
+        });
+
+        const inputPrefix = hasPrefix ? createElement('span', {
+            innerText: prefix,
+            className: `${prefixClass}-group-addon`
+        }) : null;
+
+        const inputSuffix = hasSuffix ? createElement('span', {
+            innerText: suffix,
+            className: `${prefixClass}-group-addon`
+        }) : null;
+
+        const inputGroupWrapper = hasPrefix || hasSuffix ? createElement('span', {
+            className: `${prefixClass}-group-wrapper`,
+            style: inputStyle
+        }) : null;
+
         const input = createElement('input', {
             spellcheck: false,
             autocomplete: 'off',
             type: 'text',
             className: prefixClass,
-            ...inputOptions,
-            value: value ? value : ''
+            value: value ? value : '',
+            style: inputGroupWrapper ? '' : inputStyle
         });
 
-        return { inputWrapper, input }
+        return { inputWrapper, input, inputPrefix, inputSuffix, inputGroupWrapper };
     };
 
     bindEvents(elements: IInputDOM) {
@@ -49,13 +74,32 @@ export default class Input {
         });
     };
 
+    createNormalDOMTree(elements: IInputDOM) {
+        const { input } = elements;
+        return {
+            el: input
+        }
+    }
+
     createDomTree(elements: IInputDOM) {
-        const { inputWrapper, input } = elements;
+        const { inputGroupWrapper, input, inputPrefix, inputSuffix, inputWrapper } = elements;
+        // console.log(inputGroupWrapper, inputPrefix, inputSuffix)
+        if (!inputGroupWrapper) return this.createNormalDOMTree(elements);
 
         return {
-            el: inputWrapper,
+            el: inputGroupWrapper,
             children: [{
-                el: input
+                el: inputWrapper,
+                children: [{
+                    el: inputPrefix ? inputPrefix : null,
+                    shouldRender: Boolean(inputPrefix)
+                }, {
+                    el: input
+                },
+                {
+                    el: inputSuffix ? inputSuffix : null,
+                    shouldRender: Boolean(inputSuffix)
+                }]
             }]
         }
     }
@@ -64,6 +108,7 @@ export default class Input {
         const elements = this.createDOM();
         this.bindEvents(elements);
         const domTree = this.createDomTree(elements);
+        //@ts-ignore
         return domTreeRender(domTree);
     };
 };
