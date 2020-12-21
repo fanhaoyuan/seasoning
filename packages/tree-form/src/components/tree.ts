@@ -36,7 +36,7 @@ export default class Tree {
                 for (const child of children) {
                     if (child.nodeType === 'radio') {
                         child.checked = false;
-                        this.update(child.key, { checked: false })
+                        this.update(child.key, { checked: false, expand: false })
                     }
                 };
             };
@@ -44,6 +44,7 @@ export default class Tree {
             if (checked) {
                 handle(target?.children || []);
             }
+            this.update(key, { expand: checked })
         });
 
         eventEmitter.on('radio:change', (config: ITreeNodeConfig, checked: boolean) => {
@@ -55,10 +56,10 @@ export default class Tree {
                 for (const child of children) {
                     if (child.key !== key) {
                         child.checked = false;
-                        this.update(child.key, { checked: false })
+                        this.update(child.key, { checked: false, expand: false })
                     } else {
                         child.checked = true;
-                        this.update(child.key, { checked: true });
+                        this.update(child.key, { checked: true, expand: true });
                     }
                 };
             };
