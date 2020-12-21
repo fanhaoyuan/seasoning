@@ -43,7 +43,7 @@ class EventEmitter {
      * @param event
      * @param callback
      */
-    off(event: string, callback: Function) {
+    off(event: string, callback?: Function) {
         if (!event) {
             // event 为空全部清除
             this.events = {};
