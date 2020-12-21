@@ -43,9 +43,12 @@ export interface ITreeNodeConfig {
     checked?: boolean;
     value?: string;
     nodeType?: NodeType;
-    hasInput?: boolean;
     inputOptions: {
-        [x: string]: any
+        suffix: string;
+        prefix: string;
+        style: {
+            [x in keyof CSSStyleDeclaration]: string | number;
+        }
     }
 };
 
