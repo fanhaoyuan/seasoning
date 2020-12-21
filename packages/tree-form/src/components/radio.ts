@@ -18,10 +18,11 @@ import { createElement, addClassName, domTreeRender, removeClassName } from '../
 const getCheckedClass = (prefixClass: string) => `${prefixClass}-checked`;
 
 interface IRadioDOM {
-    radioWrapper: HTMLLabelElement,
-    radio: HTMLSpanElement,
-    radioInner: HTMLSpanElement,
-    radioInput: HTMLInputElement
+    radioWrapper: HTMLLabelElement;
+    radio: HTMLSpanElement;
+    radioInner: HTMLSpanElement;
+    radioInput: HTMLInputElement;
+    radioTitle: HTMLSpanElement;
 }
 
 export default class Radio {
@@ -32,7 +33,7 @@ export default class Radio {
     constructor(config: ITreeNodeConfig) {
         this.config = config;
         eventEmitter.on(`${this.config.key}:checked`, (checked: boolean) => {
-            console.log('radio', checked)
+            // console.log('radio', checked)
             this.setStateClasses(this.el, checked)
             //@ts-ignore
             this.input.checked = checked;
@@ -41,7 +42,7 @@ export default class Radio {
 
     createDOM(): IRadioDOM {
         const { prefixClass } = this;
-
+        const { title } = this.config;
         const radioWrapper = createElement('label', {
             className: `${prefixClass}-wrapper`
         });
@@ -56,11 +57,16 @@ export default class Radio {
             className: `${prefixClass}-input`
         });
 
-        return { radioWrapper, radio, radioInner, radioInput };
+        const radioTitle = createElement('span', {
+            innerText: title
+        });
+
+
+        return { radioWrapper, radio, radioInner, radioInput, radioTitle };
     };
 
     createDomTree(elements: IRadioDOM) {
-        const { radioWrapper, radio, radioInner, radioInput } = elements;
+        const { radioWrapper, radio, radioInner, radioInput, radioTitle } = elements;
 
         this.el = radio;
         this.input = radioInput;
@@ -76,6 +82,8 @@ export default class Radio {
                     {
                         el: radioInput
                     }]
+            }, {
+                el: radioTitle
             }]
         }
     };
