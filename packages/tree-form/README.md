@@ -9,7 +9,7 @@
 |配置项|类型|说明|默认值|
 |--|--|--|--|
 |```prefixClass```|```string```|样式的前缀|```tree-form```|
-|```container```|```HTMLElemnt \|string```|渲染的容器|无|
+|```container```|```HTMLElement\|string```|渲染的容器|无|
 |```data```|```ITreeNodeConfig[]```|树形表单的数据项，详情看下表|```[]```|
 
 #### Event 事件
