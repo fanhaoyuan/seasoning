@@ -58,3 +58,8 @@ export interface ITreeData {
     key: string;
     children?: ITreeData[]
 }
+
+export interface INullElement {
+    el: null;
+    shouldRender: false;
+}

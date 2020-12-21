@@ -1,5 +1,6 @@
 'use strict';
 
+import { INullElement } from '../types';
 import { isString } from './types';
 
 /**
@@ -80,3 +81,13 @@ export const domTreeRender = (domTree: IDomTree): HTMLElement => {
 
     return el;
 };
+
+/**
+ * @description 获取空元素
+ */
+export const getNullElement = (): INullElement => {
+    return {
+        el: null,
+        shouldRender: false
+    }
+}
