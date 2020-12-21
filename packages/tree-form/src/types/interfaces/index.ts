@@ -1,7 +1,5 @@
 'use strict';
 
-import { InputType } from '../constants';
-
 export interface IConfig {
     /**可嵌套的节点属性的数组，生成 tree 的数据 */
     data: ITreeNodeConfig[];
