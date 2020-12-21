@@ -15,10 +15,11 @@ import { createElement, addClassName, removeClassName, domTreeRender } from '../
 import { ITreeNodeConfig } from '../types';
 
 interface ICheckboxDOM {
-    checkboxWrapper: HTMLLabelElement,
-    checkbox: HTMLSpanElement,
-    checkboxInner: HTMLSpanElement,
-    checkboxInput: HTMLInputElement
+    checkboxWrapper: HTMLLabelElement;
+    checkbox: HTMLSpanElement;
+    checkboxInner: HTMLSpanElement;
+    checkboxInput: HTMLInputElement;
+    checkboxTitle: HTMLSpanElement;
 };
 
 const getCheckedClass = (prefixClass: string) => `${prefixClass}-checked`;
@@ -40,6 +41,8 @@ export default class Checkbox {
     createDOM(): ICheckboxDOM {
         const { prefixClass } = this;
 
+        const { title } = this.config;
+
         const checkboxWrapper = createElement('label', {
             className: `${prefixClass}-wrapper`
         });
@@ -54,11 +57,15 @@ export default class Checkbox {
             className: `${prefixClass}-input`
         });
 
-        return { checkboxWrapper, checkbox, checkboxInner, checkboxInput };
+        const checkboxTitle = createElement('span', {
+            innerText: title
+        })
+
+        return { checkboxWrapper, checkbox, checkboxInner, checkboxInput, checkboxTitle };
     };
 
     createDomTree(elements: ICheckboxDOM) {
-        const { checkboxWrapper, checkbox, checkboxInner, checkboxInput } = elements;
+        const { checkboxWrapper, checkbox, checkboxInner, checkboxInput, checkboxTitle } = elements;
 
         this.input = checkboxInput;
         this.el = checkbox
@@ -73,6 +80,8 @@ export default class Checkbox {
                     {
                         el: checkboxInput
                     }]
+            }, {
+                el: checkboxTitle
             }]
         }
     };
