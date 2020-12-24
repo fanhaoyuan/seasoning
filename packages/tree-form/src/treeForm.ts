@@ -1,7 +1,7 @@
 'use strict';
 
 import { IConfig, ITreeNodeConfig } from './types';
-import { isString, isObject } from './utils';
+import { isString, isObject, uuid } from './utils';
 import { Tree } from './components';
 import eventEmitter from './eventEmitter';
 
@@ -53,6 +53,28 @@ export default class TreeForm {
      * @param {object} data
      */
     setData(data: ITreeNodeConfig[]): this {
+        const loop = (array: ITreeNodeConfig[]) => {
+
+            for (const child of array) {
+                const { children = [], nodeType, expand = false, checked = false, value = '', key } = child;
+
+                if (!key) child.key = uuid();
+
+                if (nodeType === 'text') child.expand = true;
+                else child.expand = expand;
+
+                if (nodeType === 'checkbox' || nodeType === 'radio') child.checked = checked;
+                else child.checked = false;
+
+                if (nodeType === 'input') child.value = value;
+                else child.value = ''
+
+                loop(children);
+            };
+        };
+
+        loop(data);
+
         this.set('data', data);
         return this;
     };
