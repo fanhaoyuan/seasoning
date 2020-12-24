@@ -14,7 +14,7 @@
   * </ul>
   */
 
-import { createElement, domTreeRender, getNullElement } from '../utils';
+import { addClassName, createElement, domTreeRender, getNullElement, removeClassName } from '../utils';
 import { ITreeNodeConfig, NodeType } from '../types';
 import { createObserver } from '../observer';
 import Checkbox from './checkbox';
@@ -33,6 +33,7 @@ export default class TreeNode {
     config: ITreeNodeConfig;
     prefixClass: string = 'tree-form';
     el: HTMLElement | null = null;
+    arrow: HTMLElement | null = null
     constructor(config: ITreeNodeConfig) {
         this.config = createObserver(config, {
             checked: {
@@ -73,6 +74,8 @@ export default class TreeNode {
                 treeNodeContainer.appendChild(childNode.el);
             }
 
+            addClassName(this.arrow as HTMLElement, `${this.prefixClass}-arrow-open`);
+
             return;
         };
 
@@ -89,6 +92,8 @@ export default class TreeNode {
 
             loop(_);
 
+            removeClassName(this.arrow as HTMLElement, `${this.prefixClass}-arrow-open`);
+
             const child = treeNodeContainer.querySelector(`.${this.prefixClass}-children`) as Node;
 
             treeNodeContainer.removeChild(child);
@@ -97,18 +102,52 @@ export default class TreeNode {
     };
 
     bindEvents(elements: ITreeNodeDOM) {
+        const { treeNodeArrow } = elements;
 
+        if (treeNodeArrow) {
+            // treeNodeArrow.addEventListener('click', () => this.config.checked = !this.config.checked);
+        }
 
     }
+    createArrow() {
+        const { prefixClass } = this;
+        const iconWrapper = createElement('i', {
+            className: `${prefixClass}-icon`
+        });
+
+        const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        iconSvg.setAttribute('viewBox', "0 0 1024 1024");
+        iconSvg.setAttribute('width', "1em");
+        iconSvg.setAttribute('height', "1em");
+        iconSvg.setAttribute('fill', "currentColor");
+        iconSvg.setAttribute("aria-hidden", 'true');
+        iconSvg.setAttribute("focusable", 'false');
+
+        const iconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+        iconPath.setAttribute('d', 'M840.4 300H183.6c-19.7 0-30.7 20.8-18.5 35l328.4 380.8c9.4 10.9 27.5 10.9 37 0L858.9 335c12.2-14.2 1.2-35-18.5-35z');
+
+        return domTreeRender({
+            el: iconWrapper,
+            children: [{
+                //@ts-ignore
+                el: iconSvg,
+                children: [{
+                    //@ts-ignore
+                    el: iconPath
+                }]
+            }]
+        })
+    }
+
     createDOM(): ITreeNodeDOM {
-        const { prefixClass, config: { title } } = this;
+        const { prefixClass, config: { title, expand } } = this;
         const treeNode = createElement('ul', {
             className: `${prefixClass}-children`
         });
-
         const treeNodeContainer = createElement('li');
         const treeNodeArrow = createElement('span', {
-            className: `${prefixClass}-arrow`
+            className: `${prefixClass}-arrow${expand ? ` ${prefixClass}-arrow-open` : ''}`
         });
         const treeNodeTitle = createElement('span', {
             className: `${prefixClass}-title`,
@@ -149,9 +188,13 @@ export default class TreeNode {
     createDOMTree(elements: ITreeNodeDOM) {
         const { treeNode, treeNodeContainer, treeNodeArrow } = elements;
 
-        const { nodeType = 'text', expand } = this.config;
+        const { nodeType = 'text', expand, children = [] } = this.config;
 
         const childrenNode: any = expand ? this.createChildrenNode() : [getNullElement()]
+
+        const arrow = children.length && ['radio', 'checkbox'].includes(nodeType) ? { el: this.createArrow() } : getNullElement();
+
+        this.arrow = treeNodeArrow;
 
         return {
             el: treeNode,
@@ -160,7 +203,8 @@ export default class TreeNode {
                     el: treeNodeContainer,
                     children: [
                         {
-                            el: treeNodeArrow
+                            el: treeNodeArrow,
+                            children: [arrow]
                         },
                         this.createCustomNode(nodeType, this.config, elements),
                         ...childrenNode
