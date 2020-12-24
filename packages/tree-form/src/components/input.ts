@@ -29,7 +29,7 @@ export default class Input {
 
 
     createDOM(): IInputDOM {
-        const { prefixClass, config: { value = '', inputOptions: { prefix, suffix, type = 'text', style = { width: '300px' } } = {}, title = '' } } = this;
+        const { prefixClass, config: { value, inputOptions: { prefix, suffix, type = 'text', style = { width: '300px' } } = {}, title = '' } } = this;
 
         const hasPrefix = isString(prefix);
         const hasSuffix = isString(suffix);
@@ -65,7 +65,7 @@ export default class Input {
             autocomplete: 'off',
             type,
             className: prefixClass,
-            value,
+            value: type === 'number' ? value ? value : 0 : '',
             style: inputGroupWrapper ? '' : inputStyle
         });
 
