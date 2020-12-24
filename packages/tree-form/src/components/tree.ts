@@ -54,6 +54,10 @@ export default class Tree {
 
             const handle = (children: ITreeNodeConfig[]) => {
                 for (const child of children) {
+                    const { nodeType = 'text' } = child;
+
+                    if (!['radio', 'checkbox'].includes(nodeType)) continue;
+
                     if (child.key !== key) {
                         child.checked = false;
                         this.update(child.key, { checked: false, expand: false })
@@ -64,7 +68,7 @@ export default class Tree {
                 };
             };
 
-            handle(target?.children || []);
+            handle(target ? (target?.children || []) : this.config.data);
         });
     };
 
