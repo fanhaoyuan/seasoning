@@ -1,0 +1,106 @@
+.@{treePrefixClass} {
+    & {
+        box-sizing: border-box;
+        color: rgba(0, 0, 0, .65);
+        font-size: 14px;
+        font-variant: tabular-nums;
+        line-height: 1.5;
+        list-style: none;
+        font-feature-settings: "tnum";
+        margin: 0;
+        padding: 0;
+
+        >li:first-child {
+            padding-top: 7px;
+        }
+
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        li {
+            margin: 0;
+            padding: 4px 0;
+            white-space: nowrap;
+            list-style: none;
+            outline: 0;
+
+            ul {
+                margin: 0;
+                padding: 0 0 0 18px;
+            }
+        }
+    }
+
+    &-children {
+        >li {
+            &:first-child {
+                padding-top: 8px;
+            }
+
+            &:last-child {
+                padding-bottom: 0px;
+            }
+        }
+    }
+
+    &-arrow {
+        position: relative;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        line-height: 24px;
+        text-align: center;
+        vertical-align: top;
+        border: 0;
+        outline: none;
+        cursor: pointer;
+    }
+
+    &-arrow &-icon {
+        font-size: 14px;
+        transform: scale(.83333333) rotate(-90deg);
+        display: inline-block;
+        font-weight: 700;
+    }
+
+    &-arrow-open &-icon {
+        transform: scale(.83333333) rotate(0deg);
+    }
+
+    & li &-title {
+        display: inline-block;
+        height: 24px;
+        margin: 0;
+        padding: 0 5px;
+        color: rgba(0, 0, 0, .65);
+        line-height: 24px;
+        text-decoration: none;
+        vertical-align: top;
+        border-radius: 2px;
+        // cursor: pointer;
+        transition: all .3s;
+    }
+
+    // ul:not(:first-child) {
+    //     padding-left: 18px;
+    // }
+
+    .@{radioPrefixClass}-wrapper,
+    .@{checkboxPrefixClass}-wrapper {
+        height: 24px;
+        margin: 0 4px 0 2px;
+        padding: 2px;
+    }
+
+    &-arrow+&-title,
+    &-arrow+&-input,
+    &-arrow+&-input-group-wrapper,
+    &-arrow+&-input-label {
+        margin-left: 24px !important;
+    }
+    
+}
