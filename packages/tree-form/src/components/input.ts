@@ -17,6 +17,7 @@ interface IInputDOM {
     inputPrefix: HTMLSpanElement | null;
     inputSuffix: HTMLSpanElement | null;
     inputGroupWrapper: HTMLSpanElement | null;
+    inputLabel: HTMLLabelElement | null;
 }
 
 export default class Input {
@@ -28,7 +29,7 @@ export default class Input {
 
 
     createDOM(): IInputDOM {
-        const { prefixClass, config: { value, inputOptions: { prefix, suffix, style = {} } = {} } } = this;
+        const { prefixClass, config: { value, inputOptions: { prefix, suffix, style = { width: '300px' } } = {}, title = '' } } = this;
 
         const hasPrefix = isString(prefix);
         const hasSuffix = isString(suffix);
@@ -38,6 +39,11 @@ export default class Input {
         const inputWrapper = createElement('div', {
             className: `${prefixClass}-wrapper${hasPrefix || hasSuffix ? ` ${prefixClass}-group` : ''}`,
         });
+
+        const inputLabel = title ? createElement('label', {
+            innerText: `${title}：`,
+            className: `${prefixClass}-label`
+        }) : null;
 
         const inputPrefix = hasPrefix ? createElement('span', {
             innerText: prefix,
@@ -63,7 +69,7 @@ export default class Input {
             style: inputGroupWrapper ? '' : inputStyle
         });
 
-        return { inputWrapper, input, inputPrefix, inputSuffix, inputGroupWrapper };
+        return { inputWrapper, inputLabel, input, inputPrefix, inputSuffix, inputGroupWrapper };
     };
 
     bindEvents(elements: IInputDOM) {
@@ -75,14 +81,22 @@ export default class Input {
     };
 
     createNormalDOMTree(elements: IInputDOM) {
-        const { input } = elements;
-        return {
-            el: input
-        }
+        const { input, inputLabel } = elements;
+        return inputLabel ?
+            {
+                el: inputLabel,
+                children: [{
+                    el: input
+                }]
+            }
+            : {
+                el: input
+            }
+
     }
 
     createDomTree(elements: IInputDOM) {
-        const { inputGroupWrapper, input, inputPrefix, inputSuffix, inputWrapper } = elements;
+        const { inputGroupWrapper, inputPrefix, inputSuffix, inputWrapper } = elements;
         // console.log(inputGroupWrapper, inputPrefix, inputSuffix)
         if (!inputGroupWrapper) return this.createNormalDOMTree(elements);
 
@@ -90,16 +104,16 @@ export default class Input {
             el: inputGroupWrapper,
             children: [{
                 el: inputWrapper,
-                children: [{
-                    el: inputPrefix ? inputPrefix : null,
-                    shouldRender: Boolean(inputPrefix)
-                }, {
-                    el: input
-                },
-                {
-                    el: inputSuffix ? inputSuffix : null,
-                    shouldRender: Boolean(inputSuffix)
-                }]
+                children: [
+                    {
+                        el: inputPrefix ? inputPrefix : null,
+                        shouldRender: Boolean(inputPrefix)
+                    },
+                    this.createNormalDOMTree(elements),
+                    {
+                        el: inputSuffix ? inputSuffix : null,
+                        shouldRender: Boolean(inputSuffix)
+                    }]
             }]
         }
     }
