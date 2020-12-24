@@ -29,7 +29,7 @@ export default class Input {
 
 
     createDOM(): IInputDOM {
-        const { prefixClass, config: { value, inputOptions: { prefix, suffix, style = { width: '300px' } } = {}, title = '' } } = this;
+        const { prefixClass, config: { value = '', inputOptions: { prefix, suffix, type = 'text', style = { width: '300px' } } = {}, title = '' } } = this;
 
         const hasPrefix = isString(prefix);
         const hasSuffix = isString(suffix);
@@ -63,9 +63,9 @@ export default class Input {
         const input = createElement('input', {
             spellcheck: false,
             autocomplete: 'off',
-            type: 'text',
+            type,
             className: prefixClass,
-            value: value ? value : '',
+            value,
             style: inputGroupWrapper ? '' : inputStyle
         });
 
@@ -74,10 +74,22 @@ export default class Input {
 
     bindEvents(elements: IInputDOM) {
         const { input } = elements;
-        input.addEventListener('input', (e) => {
-            //@ts-ignore
-            this.config.value += e.data;
-        });
+        const { inputOptions: { type = 'text' } = {} } = this.config;
+
+        if (type === 'text') {
+            input.addEventListener('input', (e) => {
+                //@ts-ignore
+                this.config.value += e.data;
+            });
+        }
+
+        if (type === 'date' || type === 'number') {
+            input.addEventListener('change', e => {
+                //@ts-ignore
+                this.config.value = e.target?.value
+            })
+        }
+
     };
 
     createNormalDOMTree(elements: IInputDOM) {

@@ -56,7 +56,7 @@ export default class TreeForm {
         const loop = (array: ITreeNodeConfig[]) => {
 
             for (const child of array) {
-                const { children = [], nodeType, expand = false, checked = false, value = '', key } = child;
+                const { children = [], nodeType, expand = false, checked = false, value = '', key, inputOptions } = child;
 
                 if (!key) child.key = uuid();
 
@@ -66,7 +66,9 @@ export default class TreeForm {
                 if (nodeType === 'checkbox' || nodeType === 'radio') child.checked = checked;
                 else child.checked = false;
 
-                if (nodeType === 'input') child.value = value;
+                if (nodeType === 'input') {
+                    child.value = value;
+                }
                 else child.value = ''
 
                 loop(children);

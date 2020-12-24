@@ -38,6 +38,7 @@ export interface ITreeNodeConfig {
     inputOptions: {
         suffix: string;
         prefix: string;
+        type: 'text' | 'date' | 'number';
         style: {
             [x in keyof CSSStyleDeclaration]: string | number;
         }
