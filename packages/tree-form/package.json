@@ -10,6 +10,9 @@
     "type": "git",
     "url": "https://github.com/fanhaoyuan/seasoning/packages/tree-form"
   },
+  "scripts": {
+    "build":"node build/build.js"
+  },
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@rollup/plugin-json": "^4.1.0",

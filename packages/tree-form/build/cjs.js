@@ -58,7 +58,9 @@ module.exports = async info => {
             globals
         })
 
-        childProcess.exec('tsc -p ./tsconfig.cjs.json')
+        childProcess.exec('tsc -p ./tsconfig.cjs.json');
+
+        childProcess.exec('lessc ./src/styles/index.less ./lib/tree-form.css')
 
         consola.success("Building for cjsBundle successfully!")
     }
