@@ -65,7 +65,7 @@ export default class Input {
             autocomplete: 'off',
             type,
             className: prefixClass,
-            value: type === 'number' ? value ? value : 0 : '',
+            value: type === 'number' ? value ? value : 0 : value ? value : '',
             style: inputGroupWrapper ? '' : inputStyle
         });
 
