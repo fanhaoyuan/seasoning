@@ -51,8 +51,19 @@ export default class TreeNode {
             }
         });
 
-        eventEmitter.on(`${this.config.key}:update`, (options: object) => this.update(options));
+        this.init()
     };
+
+    init() {
+        const { config, config: { key } } = this;
+        eventEmitter.once(`${key}:destroy`, () => this.destroy(config));
+        eventEmitter.on(`${key}:update`, (options: object) => this.update(options));
+    };
+
+    destroy(config: ITreeNodeConfig) {
+        const { key } = config;
+        eventEmitter.off(`${key}:update`);
+    }
 
     update(options: Partial<ITreeNodeConfig>) {
         Object.keys(options).forEach(key => {
@@ -82,8 +93,7 @@ export default class TreeNode {
         this.config.children?.forEach(_ => {
             const loop = (config: ITreeNodeConfig) => {
                 const { key, children = [] } = config;
-                eventEmitter.off(`${key}:update`);
-                eventEmitter.off(`${key}:checked`);
+                eventEmitter.emit(`${key}:destroy`);
 
                 for (const child of children) {
                     loop(child)
