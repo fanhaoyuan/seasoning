@@ -35,6 +35,8 @@ export interface ITreeNodeConfig {
     checked?: boolean;
     value?: string;
     nodeType?: NodeType;
+    group?: boolean;
+    options?: IOptions[];
     inputOptions: {
         suffix: string;
         prefix: string;
@@ -45,7 +47,12 @@ export interface ITreeNodeConfig {
     }
 };
 
-export type NodeType = 'checkbox' | 'radio' | 'text' | 'input'
+export type NodeType = 'checkbox' | 'radio' | 'text' | 'input';
+
+export interface IOptions {
+    key: string;
+    label: string;
+}
 
 export interface INullElement {
     el: null;
