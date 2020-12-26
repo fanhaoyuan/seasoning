@@ -1,7 +1,7 @@
 'use strict';
 
 import eventEmitter, { EventEmitter } from '../eventEmitter';
-import { ITreeNodeConfig } from '../types';
+import { ITreeNodeConfig, IOptions } from '../types';
 /**
  * @fileoverview 生成radio DOM
  * @example
@@ -13,18 +13,27 @@ import { ITreeNodeConfig } from '../types';
  *      </span>
  * </label>
  */
-import { createElement, addClassName, domTreeRender, removeClassName } from '../utils';
+import { createElement, addClassName, domTreeRender, removeClassName, uuid } from '../utils';
 
 const getCheckedClass = (prefixClass: string) => `${prefixClass}-checked`;
 
+export interface IRadioSetting {
+    inGroup?: boolean;
+    key: string;
+    label: string;
+}
+
 export default class Radio extends EventEmitter {
+    privateKey: string = uuid();
     config: ITreeNodeConfig;
+    setting: IRadioSetting;
     input!: HTMLElement;
     el!: HTMLElement;
     prefixClass: string = 'tree-form-radio';
-    constructor(config: ITreeNodeConfig) {
+    constructor(config: ITreeNodeConfig, setting?: IRadioSetting) {
         super();
         this.config = config;
+        this.setting = this.getSetting(setting);
         this.init();
     };
 
@@ -32,11 +41,48 @@ export default class Radio extends EventEmitter {
         const {
             config,
             config: {
-                key
+                key,
+                group
+            },
+            setting: {
+                inGroup
             }
         } = this;
 
         eventEmitter.once(`${key}:destroy`, () => this.destroy(config));
+
+        /**不是group */
+        if (!group) {
+            this.bindNormalEvents();
+            return;
+        }
+
+        /**是group 但不是option节点 */
+        if (!inGroup) {
+            this.bindGroupEvents();
+            return;
+        }
+
+        this.bindOptionEvents();
+
+    };
+
+    getSetting(setting: Partial<IRadioSetting> = {}): IRadioSetting {
+        const defaultSetting: IRadioSetting = {
+            inGroup: false,
+            key: uuid(),
+            label: ''
+        };
+
+        return Object.assign({}, defaultSetting, setting);
+    };
+
+    destroy(config: ITreeNodeConfig) {
+        const { key } = config;
+        eventEmitter.off(`${key}:checked`);
+    }
+
+    bindNormalEvents() {
         eventEmitter.on(`${this.config.key}:checked`, (checked: boolean) => {
             // console.log('radio', checked)
             this.setStateClasses(this.el, checked)
@@ -44,11 +90,27 @@ export default class Radio extends EventEmitter {
             this.input.checked = checked;
         })
     };
+    bindGroupEvents() {
+        const { config: { key } } = this;
 
-    destroy(config: ITreeNodeConfig) {
-        const { key } = config;
-        eventEmitter.off(`${key}:checked`);
-    }
+        eventEmitter.on(`${key}-option:change`, (option: IOptions, checked: boolean) => {
+
+            eventEmitter.emit(`${key}:checked`, option.key, checked)
+        });
+    };
+    bindOptionEvents() {
+        const { privateKey, config: { key }, setting: { key: optionKey } } = this;
+        eventEmitter.on(`${key}:checked`, (checkedKey: string, checked: boolean) => {
+
+            if (checked) this.config.checkedKeys = [checkedKey];
+
+            if (checkedKey !== optionKey) {
+                //@ts-ignore
+                this.input.checked = false;
+                this.emit(`${privateKey}:change`, false);
+            }
+        })
+    };
 
     createWrapper() {
         const { prefixClass } = this;
@@ -60,14 +122,21 @@ export default class Radio extends EventEmitter {
     createRadio() {
         const {
             prefixClass,
+            privateKey,
             config: {
-                checked = false
+                checked = false,
+                checkedKeys = []
+            },
+            setting: {
+                inGroup = false,
+                key
             }
         } = this;
 
         const classList = [`${prefixClass}`];
 
         if (checked) classList.push(getCheckedClass(prefixClass));
+        if (inGroup && checkedKeys.includes(key)) classList.push(getCheckedClass(prefixClass));
 
         const radio = createElement('span', {
             className: classList.join(' '),
@@ -79,6 +148,7 @@ export default class Radio extends EventEmitter {
             this.setStateClasses(radio, checked);
         });
 
+        this.on(`${privateKey}:change`, (checked: boolean) => this.setStateClasses(radio, checked));
 
         return radio;
     };
@@ -91,30 +161,87 @@ export default class Radio extends EventEmitter {
     };
 
     createInput() {
-        const { prefixClass, config } = this;
+        const {
+            prefixClass,
+            config: {
+                checked = false,
+                group = false,
+                checkedKeys = []
+            },
+            setting: {
+                inGroup = false,
+                key
+            }
+        } = this;
         const input = createElement('input', {
             type: 'radio',
-            className: `${prefixClass}-input`
+            className: `${prefixClass}-input`,
+            checked: !group ? checked : inGroup ? checkedKeys.includes(key) : false
         });
 
         input.addEventListener('change', (event) => {
+            const { config, config: { key, group }, privateKey, setting, setting: { inGroup } } = this;
             //@ts-ignore
             const checked = event.target?.checked;
-            eventEmitter.emit('radio:change', config, checked);
+
+            this.emit(`${privateKey}:change`, checked);
+
+            if (!group) {
+                eventEmitter.emit('radio:change', config, checked);
+                return;
+            }
+
+            if (!inGroup) {
+                return;
+            }
+
+            eventEmitter.emit(`${key}-option:change`, setting, checked);
         });
 
         return input;
     };
 
     createTitle() {
-        const { title } = this.config;
+        const {
+            config: {
+                title
+            },
+            setting: {
+                inGroup,
+                label,
+            }
+        } = this;
 
         return createElement('span', {
-            innerText: title
+            innerText: inGroup ? label : title
         });
     }
 
+    createGroup() {
+        const { prefixClass } = this;
+        return createElement('div', {
+            className: `${prefixClass}-group`
+        });
+    }
 
+    createGroupDOM() {
+        const {
+            config,
+            config: {
+                options = []
+            }
+        } = this;
+        const createGroup = this.createGroup();
+
+        return {
+            el: createGroup,
+            children: options.map(option => {
+                return {
+                    el: new Radio(config, { ...option, inGroup: true }).render()
+                }
+            })
+        }
+    }
 
     createDOM() {
         const radioWrapper = this.createWrapper();
@@ -154,6 +281,13 @@ export default class Radio extends EventEmitter {
     }
 
     render(): HTMLElement {
-        return domTreeRender(this.createDOM());
+        const { setting: {
+            inGroup = false
+        } } = this;
+        const { group = false } = this.config;
+
+        const targetDOM = group && !inGroup ? this.createGroupDOM() : this.createDOM();
+
+        return domTreeRender(targetDOM);
     }
 }
