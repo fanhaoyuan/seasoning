@@ -56,9 +56,11 @@ export default class TreeForm {
         const loop = (array: ITreeNodeConfig[]) => {
 
             for (const child of array) {
-                const { children = [], nodeType, expand = false, checked = false, value = '', key, inputOptions } = child;
+                const { children = [], nodeType, checkedKeys = [], expand = false, checked = false, value = '', key, inputOptions, group } = child;
 
                 if (!key) child.key = uuid();
+
+                if (group) child.checkedKeys = checkedKeys;
 
                 if (nodeType === 'text') child.expand = true;
                 else child.expand = expand;
