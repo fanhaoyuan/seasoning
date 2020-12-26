@@ -13,7 +13,7 @@
 'use strict';
 import eventEmitter, { EventEmitter } from '../eventEmitter';
 import { createElement, addClassName, removeClassName, domTreeRender, uuid } from '../utils';
-import { ITreeNodeConfig } from '../types';
+import { IOptions, ITreeNodeConfig } from '../types';
 
 export interface ICheckboxSetting {
     inGroup?: boolean;
@@ -38,14 +38,57 @@ export default class Checkbox extends EventEmitter {
     };
 
     init() {
-        const { config, config: { key } } = this;
+        const { config, privateKey, config: { key, group }, setting: { inGroup } } = this;
         eventEmitter.once(`${key}:destroy`, () => this.destroy.call(this, config));
+
+        /**不是group */
+        if (!group) {
+            this.bindNormalEvents();
+            return;
+        }
+
+        /**是group 但不是option节点 */
+        if (!inGroup) {
+            this.bindGroupEvents();
+            return;
+        }
+
+        this.bindOptionEvents();
+    };
+
+    bindNormalEvents() {
+        const { config: { key } } = this;
 
         eventEmitter.on(`${key}:checked`, (checked: boolean) => {
             this.setStateClasses(this.el, checked)
             //@ts-ignore
             this.input.checked = checked;
         });
+    };
+
+    bindGroupEvents() {
+        const { config: { key } } = this;
+
+        eventEmitter.on(`${key}-option:change`, (option: IOptions, checked: boolean) => {
+
+            eventEmitter.emit(`${key}:checked`, option.key, checked)
+        });
+    }
+
+    bindOptionEvents() {
+        const { config: { key }, setting: { key: optionKey } } = this;
+        eventEmitter.on(`${key}:checked`, (checkedKey: string, checked: boolean) => {
+            if (checkedKey === optionKey) {
+                if (checked) {
+                    //@ts-ignore
+                    this.config.checkedKeys = [...this.config.checkedKeys, checkedKey]
+                }
+                else {
+                    //@ts-ignore
+                    this.config.checkedKeys = this.config.checkedKeys.filter(v => v !== checkedKey);
+                }
+            }
+        })
     }
 
     destroy(config: ITreeNodeConfig) {
@@ -76,25 +119,27 @@ export default class Checkbox extends EventEmitter {
     createCheckbox() {
         const {
             prefixClass,
+            privateKey,
             config: {
-                checked = false
+                checked = false,
+                checkedKeys = []
+            },
+            setting: {
+                key,
+                inGroup = false
             }
         } = this;
 
         const classList = [`${prefixClass}`];
 
         if (checked) classList.push(getCheckedClass(prefixClass));
+        if (inGroup && checkedKeys.includes(key)) classList.push(getCheckedClass(prefixClass));
 
         const checkbox = createElement('span', {
             className: classList.join(" ")
         });
 
-        checkbox.addEventListener('change', (event) => {
-            //@ts-ignore
-            const checked: boolean = event.target.checked;
-
-            this.setStateClasses(checkbox, checked);
-        });
+        this.on(`${privateKey}:change`, (checked: boolean) => this.setStateClasses(checkbox, checked));
 
         return checkbox;
     };
@@ -110,23 +155,40 @@ export default class Checkbox extends EventEmitter {
         const {
             prefixClass,
             config: {
-                checked = false
+                checked = false,
+                group,
+                checkedKeys = []
+            },
+            setting: {
+                inGroup = false,
+                key
             }
         } = this;
 
         const input = createElement('input', {
             type: 'checkbox',
             className: `${prefixClass}-input`,
-            checked
+            checked: !group ? checked : inGroup ? checkedKeys.includes(key) : false
         });
 
         input.addEventListener('change', (event) => {
-            const { config, config: { key }, setting: { inGroup, key: privateKey } } = this;
+            const { config, config: { key, group }, privateKey, setting, setting: { inGroup } } = this;
             //@ts-ignore
             const checked: boolean = event?.target?.checked;
             this.config.checked = checked;
 
-            eventEmitter.emit('checkbox:change', config, checked);
+            this.emit(`${privateKey}:change`, checked);
+
+            if (!group) {
+                eventEmitter.emit('checkbox:change', config, checked);
+                return;
+            }
+
+            if (!inGroup) {
+                return;
+            }
+
+            eventEmitter.emit(`${key}-option:change`, setting, checked);
         });
 
         return input;
@@ -136,13 +198,43 @@ export default class Checkbox extends EventEmitter {
         const {
             config: {
                 title
+            },
+            setting: {
+                inGroup,
+                label,
             }
         } = this;
 
         return createElement('span', {
-            innerText: title
+            innerText: inGroup ? label : title
         });
     };
+
+    createGroup() {
+        const { prefixClass } = this;
+        return createElement('div', {
+            className: `${prefixClass}-group`
+        });
+    }
+
+    createGroupDOM() {
+        const {
+            config,
+            config: {
+                options = []
+            }
+        } = this;
+        const createGroup = this.createGroup();
+
+        return {
+            el: createGroup,
+            children: options.map(option => {
+                return {
+                    el: new Checkbox(config, { ...option, inGroup: true }).render()
+                }
+            })
+        }
+    }
 
     createDOM() {
         const checkboxWrapper = this.createWrapper();
@@ -152,7 +244,7 @@ export default class Checkbox extends EventEmitter {
         const checkboxTitle = this.createTitle();
 
         this.input = checkboxInput;
-        this.el = checkbox
+        this.el = checkbox;
         return {
             el: checkboxWrapper,
             children: [{
@@ -171,7 +263,14 @@ export default class Checkbox extends EventEmitter {
     };
 
     render(): HTMLElement {
-        return domTreeRender(this.createDOM());
+        const { setting: {
+            inGroup = false
+        } } = this;
+        const { group = false } = this.config;
+
+        const targetDOM = group && !inGroup ? this.createGroupDOM() : this.createDOM();
+
+        return domTreeRender(targetDOM);
     };
 
     setStateClasses(target: HTMLElement, checked: boolean) {
