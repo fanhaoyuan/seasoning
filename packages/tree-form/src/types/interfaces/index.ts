@@ -31,7 +31,7 @@ export interface ITreeNodeConfig {
     disableCheckbox?: boolean;
     /**子节点属性数组 */
     children?: ITreeNodeConfig[];
-
+    checkedKeys?: string[];
     checked?: boolean;
     value?: string;
     nodeType?: NodeType;
